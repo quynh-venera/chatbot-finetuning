@@ -53,9 +53,28 @@ def _latest_crawl_file() -> Path:
     return files[-1]
 
 
+def _strip_markdown_fences(raw: str) -> str:
+    """Strip ```json ... ``` or ``` ... ``` fences if the model wrapped its
+    JSON output in them despite being asked not to."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        # Drop the opening fence line (``` or ```json) and the closing ```.
+        lines = raw.split("\n")
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        raw = "\n".join(lines).strip()
+    return raw
+
+
 def generate_pairs_for_page(url: str, content: str) -> list[dict]:
     """Call GPT-4o to generate up to MAX_QUESTIONS_PER_PAGE Q&A pairs for one page."""
     prompt = SYSTEM_PROMPT.format(n=MAX_QUESTIONS_PER_PAGE)
+
+    # Step 1: the API call itself. Kept separate from parsing so failures
+    # here (rate limits, auth, content filter, network) are distinguishable
+    # from a parsing failure on a successful response.
     try:
         response = openai_client.chat.completions.create(
             model=MODEL_NAME,
@@ -65,14 +84,38 @@ def generate_pairs_for_page(url: str, content: str) -> list[dict]:
             ],
             temperature=0.3,
         )
-        raw = response.choices[0].message.content.strip()
-        pairs = json.loads(raw)
-        for p in pairs:
-            p["source_url"] = url
-        return pairs[:MAX_QUESTIONS_PER_PAGE]
-    except (json.JSONDecodeError, Exception) as e:  # noqa: BLE001
-        print(f"[synthetic] Failed to generate/parse pairs for {url}: {e}")
+    except Exception as e:  # noqa: BLE001 — genuinely any API failure is reportable here
+        print(f"[synthetic] OpenAI API call failed for {url}: {type(e).__name__}: {e}")
         return []
+
+    raw = (response.choices[0].message.content or "").strip()
+
+    if not raw:
+        finish_reason = response.choices[0].finish_reason
+        print(f"[synthetic] Empty completion for {url} "
+              f"(finish_reason={finish_reason}). Skipping.")
+        return []
+
+    cleaned = _strip_markdown_fences(raw)
+
+    # Step 2: parsing. Separated from the API call so we can show the
+    # actual raw text on failure instead of a generic message.
+    try:
+        pairs = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        preview = cleaned[:200].replace("\n", "\\n")
+        print(f"[synthetic] JSON parse failed for {url}: {e}. "
+              f"Raw response preview: {preview!r}")
+        return []
+
+    if not isinstance(pairs, list):
+        print(f"[synthetic] Unexpected response shape for {url}: "
+              f"expected a JSON array, got {type(pairs).__name__}.")
+        return []
+
+    for p in pairs:
+        p["source_url"] = url
+    return pairs[:MAX_QUESTIONS_PER_PAGE]
 
 
 def run_synthetic() -> Path:

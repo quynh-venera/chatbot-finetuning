@@ -1,0 +1,11 @@
+{
+  "date": "2026-06-24",
+  "raw_pairs": 130,
+  "filtered_out_min_answer_chars": 11,
+  "min_answer_chars_threshold": 100,
+  "duplicates_removed": 3,
+  "total": 116,
+  "train": 92,
+  "val": 11,
+  "test": 13
+}
