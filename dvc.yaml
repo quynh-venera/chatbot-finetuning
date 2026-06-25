@@ -1,0 +1,28 @@
+stages:
+  crawl:
+    cmd: python -m src.acquisition.crawler
+    deps:
+      - src/acquisition/crawler.py
+      - src/acquisition/link_discovery.py
+    outs:
+      - data/raw/crawled
+      - data/manifest.json
+
+  synthetic:
+    cmd: python -m src.acquisition.synthetic
+    deps:
+      - src/acquisition/synthetic.py
+      - data/raw/crawled
+    outs:
+      - data/raw/synthetic
+
+  merge:
+    cmd: python -m src.acquisition.processor
+    deps:
+      - src/acquisition/processor.py
+      - data/raw/synthetic
+    outs:
+      - data/processed/train.jsonl
+      - data/processed/val.jsonl
+      - data/processed/test.jsonl
+      - data/processed/stats.json

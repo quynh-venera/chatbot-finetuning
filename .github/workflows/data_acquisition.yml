@@ -1,0 +1,40 @@
+name: Data Acquisition
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  run-batch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run acquisition + processing batch
+        env:
+          JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VENERA_SITEMAP_URL: ${{ secrets.VENERA_SITEMAP_URL }}
+        run: |
+          python -m src.acquisition.run_batch
+
+      - name: Upload processed data as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: processed-data
+          path: data/processed/

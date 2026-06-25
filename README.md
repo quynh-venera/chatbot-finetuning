@@ -80,4 +80,3 @@ chatbot-finetuning/
 │   └── run_batch.py
 └── .github/workflows/data_acquisition.yml
 ```
-# chatbot-finetuning

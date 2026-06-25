@@ -1,0 +1,4 @@
+[core]
+    remote = azure_remote
+['remote "azure_remote"']
+    url = azure://venera-dvc/datasets
