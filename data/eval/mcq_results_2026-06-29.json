@@ -1,0 +1,206 @@
+{
+  "date": "2026-06-29",
+  "test_file": "data/processed/test.jsonl",
+  "model_url": "http://127.0.0.1:8888/v1",
+  "total_questions": 13,
+  "correct": 11,
+  "incorrect": 2,
+  "score_pct": 84.6,
+  "results": [
+    {
+      "question_index": 1,
+      "question": "What actions are prohibited when using Venerian's site?",
+      "correct_answer": "Prohibited actions include harassing or causing distress to other users, transmitting obscene content, disrupting dialogue, attempting unauthorized access to systems, and transmitting malicious software or viruses.",
+      "correct_letter": "D",
+      "choices": {
+        "A": "This feature is not available in Venera AI.",
+        "B": "Using your device to play loud music, disturbing other users",
+        "C": "Venera AI does not support this functionality.",
+        "D": "Prohibited actions include harassing or causing distress to other users, transmitting obscene content, disrupting dialogue, attempting unauthorized access to systems, and transmitting malicious software or viruses."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Prohibited actions include harassing or causing distress to other users, transmitting obscene content, disrupting dialogue, attempting unauthorized access to systems, and transmitting malicious software or viruses.",
+      "is_correct": true
+    },
+    {
+      "question_index": 2,
+      "question": "Làm thế nào Venera AI sử dụng AI để cải thiện sức khỏe người dùng?",
+      "correct_answer": "Venera AI sử dụng công nghệ AI để phân tích dữ liệu sức khỏe của bạn, nhận diện sớm những dấu hiệu bất thường và gửi cảnh báo kịp thời, giúp bạn phòng tránh bệnh hiệu quả.",
+      "correct_letter": "C",
+      "choices": {
+        "A": "Venera AI sử dụng AI để lên kế hoạch cho các bệnh lý sức khỏe dựa trên dữ liệu của bạn",
+        "B": "Venera AI phân tích dữ liệu sức khỏe của bạn bằng cách xem xét các yếu tố lão hóa và di truyền",
+        "C": "Venera AI sử dụng công nghệ AI để phân tích dữ liệu sức khỏe của bạn, nhận diện sớm những dấu hiệu bất thường và gửi cảnh báo kịp thời, giúp bạn phòng tránh bệnh hiệu quả.",
+        "D": "Venera AI sử dụng AI để dự đoán bệnh tật dựa trên dữ liệu sức khỏe của bạn"
+      },
+      "model_answer_letter": "C",
+      "model_answer_text": "Venera AI sử dụng công nghệ AI để phân tích dữ liệu sức khỏe của bạn, nhận diện sớm những dấu hiệu bất thường và gửi cảnh báo kịp thời, giúp bạn phòng tránh bệnh hiệu quả.",
+      "is_correct": true
+    },
+    {
+      "question_index": 3,
+      "question": "What is the main function of Venera AI's health platform?",
+      "correct_answer": "Venera AI's health platform is designed to synchronize biological information from various wearable devices and transform it into understandable, actionable insights. It helps users understand their bodies better, provides early warnings, and stores long-term 'biological profiles'.",
+      "correct_letter": "D",
+      "choices": {
+        "A": "Venera AI's health platform is designed to synchronize biological information from various fitness trackers and transform it into understandable, actionable insights. It helps users understand their bodies better, provides early warnings, and stores long-term 'fitness profiles'.",
+        "B": "Venera AI's health platform is designed to synchronize biological information from various smart home devices and transform it into understandable, actionable insights. It helps users understand their bodies better, provides early warnings, and stores long-term 'smart home profiles'.",
+        "C": "Venera AI's health platform is designed to synchronize biological information from various household appliances and transform it into understandable, actionable insights. It helps users understand their bodies better, provides early warnings, and stores long-term 'household profiles'.",
+        "D": "Venera AI's health platform is designed to synchronize biological information from various wearable devices and transform it into understandable, actionable insights. It helps users understand their bodies better, provides early warnings, and stores long-term 'biological profiles'."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Venera AI's health platform is designed to synchronize biological information from various wearable devices and transform it into understandable, actionable insights. It helps users understand their bodies better, provides early warnings, and stores long-term 'biological profiles'.",
+      "is_correct": true
+    },
+    {
+      "question_index": 4,
+      "question": "What support does Venera AI provide for healthcare providers?",
+      "correct_answer": "Venera AI offers an interactive AI dashboard for doctors, helping them manage patient data efficiently. It displays health information visually and provides AI-based diagnostic suggestions.",
+      "correct_letter": "C",
+      "choices": {
+        "A": "Venera AI enables healthcare providers to remotely monitor patient vitals in real-time.",
+        "B": "Venera AI offers a telemedicine platform where doctors can consult patients in different locations.",
+        "C": "Venera AI offers an interactive AI dashboard for doctors, helping them manage patient data efficiently. It displays health information visually and provides AI-based diagnostic suggestions.",
+        "D": "Venera AI provides a comprehensive suite of AI-powered tools for patient management and care coordination."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Venera AI provides a comprehensive suite of AI-powered tools for patient management and care coordination.",
+      "is_correct": false
+    },
+    {
+      "question_index": 5,
+      "question": "What benefits does Venera AI gain from joining the Swartz Center for Entrepreneurship?",
+      "correct_answer": "Venera AI gains access to comprehensive support including expert mentorship, a bridge between research and practical application, and access to investment resources and growth opportunities.",
+      "correct_letter": "A",
+      "choices": {
+        "A": "Venera AI gains access to comprehensive support including expert mentorship, a bridge between research and practical application, and access to investment resources and growth opportunities.",
+        "B": "Venera AI gains access to comprehensive support including expert mentorship, a bridge between research and practical application, and access to internship opportunities and growth opportunities.",
+        "C": "Venera AI gains access to comprehensive support including expert mentorship, a bridge between research and practical application, and access to networking events and growth opportunities.",
+        "D": "Venera AI gains access to comprehensive support including expert mentorship, a bridge between research and practical application, and access to investment resources and growth opportunities."
+      },
+      "model_answer_letter": "A",
+      "model_answer_text": "Venera AI gains access to comprehensive support including expert mentorship, a bridge between research and practical application, and access to investment resources and growth opportunities.",
+      "is_correct": true
+    },
+    {
+      "question_index": 6,
+      "question": "What partnership involving Venera AI is mentioned in the blog posts?",
+      "correct_answer": "Venera AI has joined the Swartz Center for Entrepreneurship to shape the future of smart healthcare in collaboration with Carnegie Mellon University.",
+      "correct_letter": "D",
+      "choices": {
+        "A": "Venera AI has partnered with the University of California, Berkeley to develop a smart home assistant.",
+        "B": "Venera AI does not support this functionality.",
+        "C": "This feature is not available in Venera AI.",
+        "D": "Venera AI has joined the Swartz Center for Entrepreneurship to shape the future of smart healthcare in collaboration with Carnegie Mellon University."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Venera AI has joined the Swartz Center for Entrepreneurship to shape the future of smart healthcare in collaboration with Carnegie Mellon University.",
+      "is_correct": true
+    },
+    {
+      "question_index": 7,
+      "question": "Can I rely on Venera AI's website for medical advice?",
+      "correct_answer": "No, the Site cannot and does not contain medical, psychiatric, or healthcare advice. It is not a substitute for professional medical expertise or treatment.",
+      "correct_letter": "C",
+      "choices": {
+        "A": "Venera AI's website is a reliable source for medical information.",
+        "B": "Yes, the site can provide medical advice as long as you understand it's not medical advice.",
+        "C": "No, the Site cannot and does not contain medical, psychiatric, or healthcare advice. It is not a substitute for professional medical expertise or treatment.",
+        "D": "The site is a great resource for general health tips and guidance."
+      },
+      "model_answer_letter": "C",
+      "model_answer_text": "No, the Site cannot and does not contain medical, psychiatric, or healthcare advice. It is not a substitute for professional medical expertise or treatment.",
+      "is_correct": true
+    },
+    {
+      "question_index": 8,
+      "question": "How can I contact Venera AI if I have questions about the Terms of Service?",
+      "correct_answer": "You can contact Venera AI by email at admin@venerian.space or through their website at https://venerian.space/contact.",
+      "correct_letter": "C",
+      "choices": {
+        "A": "You can contact Venera AI by phone at 1-800-VENERA-88",
+        "B": "You can contact Venera AI by visiting their physical office at 123 Main Street",
+        "C": "You can contact Venera AI by email at admin@venerian.space or through their website at https://venerian.space/contact.",
+        "D": "You can contact Venera AI by sending a message on their Discord server"
+      },
+      "model_answer_letter": "C",
+      "model_answer_text": "You can contact Venera AI by email at admin@venerian.space or through their website at https://venerian.space/contact.",
+      "is_correct": true
+    },
+    {
+      "question_index": 9,
+      "question": "What is the topic of the article published on 13/1/2026?",
+      "correct_answer": "The article discusses the sleep cycle and brain performance, providing a scientific perspective in the AI era.",
+      "correct_letter": "A",
+      "choices": {
+        "A": "The article discusses the sleep cycle and brain performance, providing a scientific perspective in the AI era.",
+        "B": "The article explores the effects of climate change on wildlife populations.",
+        "C": "The article focuses on the impact of social media on mental health.",
+        "D": "The article examines the role of technology in education, from the 19th century to the present day."
+      },
+      "model_answer_letter": "A",
+      "model_answer_text": "The article discusses the sleep cycle and brain performance, providing a scientific perspective in the AI era.",
+      "is_correct": true
+    },
+    {
+      "question_index": 10,
+      "question": "How should I correctly apply cold therapy?",
+      "correct_answer": "Do not place ice directly on the skin. Wrap the ice in a soft cloth or use a specialized cold pack. This prevents cold burns and is effective for conditions like knee arthritis or rheumatoid arthritis with swelling and heat.",
+      "correct_letter": "C",
+      "choices": {
+        "A": "This feature is not available in Venera AI.",
+        "B": "Venera AI does not support this functionality.",
+        "C": "Do not place ice directly on the skin. Wrap the ice in a soft cloth or use a specialized cold pack. This prevents cold burns and is effective for conditions like knee arthritis or rheumatoid arthritis with swelling and heat.",
+        "D": "Do not place ice directly on the skin. Wrap the ice in a soft towel or use a cold pack. This prevents cold burns and is effective for conditions like knee arthritis or rheumatoid arthritis with swelling and heat."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Do not place ice directly on the skin. Wrap the ice in a soft towel or use a cold pack. This prevents cold burns and is effective for conditions like knee arthritis or rheumatoid arthritis with swelling and heat.",
+      "is_correct": false
+    },
+    {
+      "question_index": 11,
+      "question": "How does Venera AI ensure the privacy of user data?",
+      "correct_answer": "Venera AI never sells or shares user data with third parties and does not store personal health data in its system. Users have full control over their privacy.",
+      "correct_letter": "D",
+      "choices": {
+        "A": "Venera AI uses anonymization techniques to de-identify user data.",
+        "B": "Venera AI encrypts all user data to prevent unauthorized access.",
+        "C": "Venera AI stores user data locally on the user's device to ensure security.",
+        "D": "Venera AI never sells or shares user data with third parties and does not store personal health data in its system. Users have full control over their privacy."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Venera AI never sells or shares user data with third parties and does not store personal health data in its system. Users have full control over their privacy.",
+      "is_correct": true
+    },
+    {
+      "question_index": 12,
+      "question": "Can Venera AI assist with understanding medical test results?",
+      "correct_answer": "Yes, Venera AI's AI health assistant is available 24/7 to answer questions about medical records, test results, or symptoms, providing immediate feedback.",
+      "correct_letter": "D",
+      "choices": {
+        "A": "No, Venera AI's assistant is solely for educational tutoring.",
+        "B": "Yes, Venera AI can help with legal document writing.",
+        "C": "No, Venera AI's assistant is only available for financial planning advice.",
+        "D": "Yes, Venera AI's AI health assistant is available 24/7 to answer questions about medical records, test results, or symptoms, providing immediate feedback."
+      },
+      "model_answer_letter": "D",
+      "model_answer_text": "Yes, Venera AI's AI health assistant is available 24/7 to answer questions about medical records, test results, or symptoms, providing immediate feedback.",
+      "is_correct": true
+    },
+    {
+      "question_index": 13,
+      "question": "What role does sleep play in brain function according to Venera AI's article?",
+      "correct_answer": "Sleep is essential for brain and body recovery, memory consolidation, emotional regulation, hormone balance, and metabolic waste clearance through the glymphatic system.",
+      "correct_letter": "C",
+      "choices": {
+        "A": "Venera AI does not support this functionality.",
+        "B": "Sleep helps the brain organize and store memories, improving learning and skill acquisition.",
+        "C": "Sleep is essential for brain and body recovery, memory consolidation, emotional regulation, hormone balance, and metabolic waste clearance through the glymphatic system.",
+        "D": "This feature is not available in Venera AI."
+      },
+      "model_answer_letter": "C",
+      "model_answer_text": "Sleep is essential for brain and body recovery, memory consolidation, emotional regulation, hormone balance, and metabolic waste clearance through the glymphatic system.",
+      "is_correct": true
+    }
+  ]
+}

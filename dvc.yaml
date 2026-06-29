@@ -26,3 +26,12 @@ stages:
       - data/processed/val.jsonl
       - data/processed/test.jsonl
       - data/processed/stats.json
+
+  cpt_prep:
+    cmd: python -m src.pretraining.cpt_processor
+    deps:
+      - src/pretraining/cpt_processor.py
+      - data/raw/crawled
+    outs:
+      - data/processed/cpt/cpt_corpus.jsonl
+      - data/processed/cpt/cpt_stats.json

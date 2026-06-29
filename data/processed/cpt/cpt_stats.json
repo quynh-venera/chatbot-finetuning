@@ -1,0 +1,15 @@
+{
+  "date": "2026-06-25",
+  "source_crawl_file": "crawl_2026-06-24.jsonl",
+  "pages_read": 26,
+  "pages_filtered_url_pattern": 17,
+  "excluded_path_segments": [
+    "privacy",
+    "terms",
+    "vi"
+  ],
+  "pages_filtered_min_chars": 0,
+  "min_page_chars_threshold": 100,
+  "chunks_written": 35,
+  "approx_total_tokens": 15314
+}

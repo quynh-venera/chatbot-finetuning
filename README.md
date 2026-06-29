@@ -10,7 +10,8 @@ Data acquisition, processing, and fine-tuning pipeline for the **Venera AI** cha
 |---|---|---|
 | 1 | Data acquisition (crawl + synthetic + DVC versioning) | Done |
 | 2 | Data processing (clean, chunk, chat template, split) | Done |
-| 3 | Fine-tuning (Unsloth Studio GUI, Qwen2.5-1.5B) | Next |
+| 2.5 | Continued pre-training (CPT) data prep — *prototype/learning addition, not in original 9-stage plan* | Done |
+| 3 | Fine-tuning (Unsloth Studio GUI, Qwen2.5-1.5B) — CPT then LoRA instruction tuning | Next |
 | 4 | Evaluation (MCQ benchmark, retrieval metrics) | Pending |
 | 5 | Optimization (quantization via llama.cpp → GGUF) | Pending |
 | 6 | Deployment (CI/CD, Docker, Azure VM, GKE, Kubernetes) | Pending |
@@ -29,6 +30,33 @@ pip install -r requirements.txt
 cp .env.example .env
 # then fill in JINA_API_KEY, OPENAI_API_KEY, etc.
 ```
+
+## Stage 2.5: Continued pre-training (CPT) data prep
+
+This is an addition beyond the original 9-stage plan, included to prototype the
+full ML engineering process (CPT + instruction fine-tuning) rather than only
+instruction fine-tuning alone. It is **not** required for a working chatbot —
+Stage 3's LoRA fine-tuning on `train.jsonl`/`val.jsonl` works fine on its own.
+
+CPT trains a model on raw, unlabeled text so it absorbs domain phrasing/knowledge,
+as distinct from Stage 2's labeled Q&A pairs which teach specific behavior. See
+[Unsloth's CPT docs](https://unsloth.ai/docs/basics/continued-pretraining) for
+the underlying technique.
+
+```bash
+python -m src.pretraining.cpt_processor
+```
+
+Reads the latest `data/raw/crawled/crawl_*.jsonl`, cleans and chunks each page's
+raw content (same chunking approach as Stage 2), and writes:
+
+- `data/processed/cpt/cpt_corpus.jsonl` — `{"text": "..."}` records, the format
+  Unsloth's text-completion/CPT notebooks expect
+- `data/processed/cpt/cpt_stats.json` — page/chunk/token counts
+
+**Caveat:** our corpus (~26 crawled pages) is small relative to typical CPT
+corpora (hundreds of thousands of tokens or more). Treat this stage as a
+pipeline prototype/learning exercise, not a production domain adaptation.
 
 ## Stage 1 + 2: run the full acquisition + processing batch
 
@@ -66,17 +94,39 @@ chatbot-finetuning/
 ├── .dvc/config
 ├── dvc.yaml
 ├── requirements.txt
+├── preview_data.py
 ├── logs/
 ├── data/
 │   ├── manifest.json
 │   ├── raw/{crawled,synthetic}/
-│   └── processed/{train,val,test}.jsonl, all_with_meta.jsonl, stats.json
-├── src/acquisition/
-│   ├── crawler.py
-│   ├── link_discovery.py
-│   ├── synthetic.py
-│   ├── processor.py
-│   ├── merge.py          (legacy, unused — kept for reference)
-│   └── run_batch.py
+│   └── processed/
+│       ├── {train,val,test}.jsonl, all_with_meta.jsonl, stats.json
+│       └── cpt/cpt_corpus.jsonl, cpt_stats.json   (Stage 2.5)
+├── src/
+│   ├── acquisition/
+│   │   ├── crawler.py
+│   │   ├── link_discovery.py
+│   │   ├── synthetic.py
+│   │   ├── processor.py
+│   │   ├── merge.py          (legacy, unused — kept for reference)
+│   │   └── run_batch.py
+│   └── pretraining/
+│       └── cpt_processor.py  (Stage 2.5 — CPT data prep)
 └── .github/workflows/data_acquisition.yml
 ```
+
+Findings to document before moving on
+Add these to your notes/README so they don't get lost by Stage 4:
+Known issues with this training run (v1):
+
+LR initially set wrong (1e-5 instead of 1e-4) — caught and corrected, final run used correct LR
+Only 6 optimizer steps total — extremely low, artifact of 92 train examples + effective batch size 32
+Model over-refuses on core product questions it should be able to answer ("Can I upload medical records?" refused despite being explicitly in training data)
+Vietnamese Q&A contamination in training data likely reinforced deferral behavior on ambiguous queries
+Off-topic blog content (nutrition, stress physiology) in training data may have contributed to scope confusion
+
+Hypothesized fixes for iteration 2:
+
+Filter /vi/ pages from crawler.py's URL discovery, not just from CPT prep
+Update synthetic.py's system prompt to skip blog/editorial pages (or filter by URL pattern before generation)
+Increase effective training steps — either more data, smaller batch size, or more epochs
