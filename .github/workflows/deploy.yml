@@ -53,6 +53,12 @@ jobs:
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GKE_ZONE }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
 
       - name: Update deployment image
         run: |
@@ -66,4 +72,3 @@ jobs:
       - name: Print service endpoint
         run: |
           kubectl get service venera-chatbot-service
-# trigger
