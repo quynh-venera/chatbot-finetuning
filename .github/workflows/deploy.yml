@@ -13,7 +13,7 @@ on:
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GKE_CLUSTER: venera-chatbot-cluster
-  GKE_ZONE: us-east1-b
+  GKE_ZONE: us-central1-a
   IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/venera-chatbot
 
 jobs:
@@ -61,7 +61,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/venera-chatbot --timeout=300s
+          kubectl rollout status deployment/venera-chatbot --timeout=600s
 
       - name: Print service endpoint
         run: |

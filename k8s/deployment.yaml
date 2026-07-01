@@ -4,8 +4,8 @@
 # Model is downloaded from HuggingFace at pod startup via HF_TOKEN.
 #
 # Before applying:
-#   1. Replace venera-chatbot with your actual GCP project ID.
-#   2. Replace quynh-venera1 with your HuggingFace username.
+#   1. Replace YOUR_GCP_PROJECT_ID with your actual GCP project ID.
+#   2. Replace YOUR_HF_USERNAME with your HuggingFace username.
 #   3. Create the venera-secrets Secret:
 #      kubectl create secret generic venera-secrets \
 #        --from-literal=hf-token=hf_YOUR_TOKEN_HERE
@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: venera-chatbot
-          image: us-east1-docker.pkg.dev/venera-chatbot/venera-chatbot/venera-chatbot:latest
+          image: gcr.io/YOUR_GCP_PROJECT_ID/venera-chatbot:latest
           ports:
             - containerPort: 8000
           env:
@@ -39,7 +39,7 @@ spec:
                   name: venera-secrets
                   key: hf-token
             - name: HF_REPO_ID
-              value: "quynh-venera1/venera-chatbot-model"
+              value: "YOUR_HF_USERNAME/venera-chatbot-model"
             - name: HF_FILENAME
               value: "model-q4.gguf"
             - name: MODEL_CACHE_PATH
@@ -68,7 +68,7 @@ spec:
               path: /ready
               port: 8000
             # First startup downloads ~1GB from HuggingFace then loads model.
-            # Allow up to 3 minutes before marking as not ready.
-            initialDelaySeconds: 30
+            # Allow up to 5 minutes before marking as not ready.
+            initialDelaySeconds: 60
             periodSeconds: 15
-            failureThreshold: 12
+            failureThreshold: 20
