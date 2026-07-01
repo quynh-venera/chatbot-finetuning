@@ -13,8 +13,9 @@ on:
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GKE_CLUSTER: venera-chatbot-cluster
-  GKE_ZONE: us-central1-a
-  IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/venera-chatbot
+  GKE_ZONE: us-east1-b
+  GKE_ENDPOINT: 35.190.161.48
+  IMAGE: us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/venera-chatbot/venera-chatbot
 
 jobs:
   build-and-deploy:
@@ -33,7 +34,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for GCR
-        run: gcloud auth configure-docker --quiet
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
 
       - name: Build Docker image
         # No model baked in — image is just code (~100MB).
@@ -57,12 +58,9 @@ jobs:
 
       - name: Fix kubectl server endpoint
         run: |
-          ENDPOINT=$(gcloud container clusters describe ${{ env.GKE_CLUSTER }} \
-            --zone ${{ env.GKE_ZONE }} \
-            --format="value(endpoint)")
           kubectl config set-cluster $(kubectl config current-context) \
-            --server="https://${ENDPOINT}"
-          echo "Cluster endpoint set to: https://${ENDPOINT}"
+            --server="https://${{ env.GKE_ENDPOINT }}"
+          echo "Cluster endpoint set to: https://${{ env.GKE_ENDPOINT }}"
 
       - name: Verify cluster connection
         run: |
