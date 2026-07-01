@@ -66,3 +66,4 @@ jobs:
       - name: Print service endpoint
         run: |
           kubectl get service venera-chatbot-service
+# trigger
