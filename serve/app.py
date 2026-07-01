@@ -19,6 +19,7 @@ Environment variables (set in .env locally, Kubernetes Secret in GKE):
 
 import os
 import time
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -90,6 +91,18 @@ MODEL_LOAD_SECONDS = Gauge(
 # --- Model loading -----------------------------------------------------------
 
 llm: Llama | None = None
+
+# llama.cpp's Llama object is NOT safe for concurrent calls on a shared
+# context — two threads calling llm() at the same time can corrupt native
+# memory and crash the process with SIGSEGV (confirmed via Stage 7 load
+# testing: 10 concurrent /chat requests reliably segfaulted the pod, exit
+# code 139, within seconds). FastAPI runs sync `def` endpoints in a
+# threadpool, so without this lock, concurrent /chat requests WILL crash
+# the server. This trades concurrency for correctness: only one inference
+# runs at a time, and everything else queues. That's the right tradeoff
+# for a single CPU-bound model instance — the alternative is not "slower,"
+# it's "crashes."
+INFERENCE_LOCK = threading.Lock()
 
 
 def _ensure_model() -> str:
@@ -257,12 +270,21 @@ def chat(request: ChatRequest):
 
     REQUESTS_IN_PROGRESS.inc()
     try:
-        output = llm(
-            prompt,
-            max_tokens=max_tok,
-            stop=["<|im_end|>", "<|im_start|>"],
-            echo=False,
-        )
+        # See INFERENCE_LOCK definition above: llama.cpp is not safe for
+        # concurrent calls on a shared context. Without this lock, two
+        # simultaneous /chat requests can segfault the whole process.
+        # REQUESTS_IN_PROGRESS is incremented before acquiring the lock
+        # (not after), so the metric reflects requests that are queued
+        # waiting for the lock as well as the one actually running —
+        # that queue depth is exactly what you want visible in Grafana
+        # under load, since it's the first sign of saturation.
+        with INFERENCE_LOCK:
+            output = llm(
+                prompt,
+                max_tokens=max_tok,
+                stop=["<|im_end|>", "<|im_start|>"],
+                echo=False,
+            )
     except Exception as e:
         INFERENCE_ERRORS.inc()
         raise HTTPException(status_code=500, detail=f"Inference error: {e}")
