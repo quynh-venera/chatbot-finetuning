@@ -55,6 +55,15 @@ jobs:
           location: ${{ env.GKE_ZONE }}
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Fix kubectl server endpoint
+        run: |
+          ENDPOINT=$(gcloud container clusters describe ${{ env.GKE_CLUSTER }} \
+            --zone ${{ env.GKE_ZONE }} \
+            --format="value(endpoint)")
+          kubectl config set-cluster $(kubectl config current-context) \
+            --server="https://${ENDPOINT}"
+          echo "Cluster endpoint set to: https://${ENDPOINT}"
+
       - name: Verify cluster connection
         run: |
           kubectl cluster-info
