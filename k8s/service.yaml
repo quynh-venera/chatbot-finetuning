@@ -1,0 +1,19 @@
+# k8s/service.yaml
+#
+# LoadBalancer Service — provisions a GCP external load balancer
+# and assigns a public IP to the chatbot deployment.
+# After applying, run: kubectl get service venera-chatbot-service
+# to get the EXTERNAL-IP (may take 1-2 minutes to provision).
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: venera-chatbot-service
+spec:
+  selector:
+    app: venera-chatbot
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer

@@ -1,0 +1,74 @@
+# k8s/deployment.yaml
+#
+# Kubernetes Deployment for the Venera AI chatbot inference server.
+# Model is downloaded from HuggingFace at pod startup via HF_TOKEN.
+#
+# Before applying:
+#   1. Replace venera-chatbot with your actual GCP project ID.
+#   2. Replace quynh-venera1 with your HuggingFace username.
+#   3. Create the venera-secrets Secret:
+#      kubectl create secret generic venera-secrets \
+#        --from-literal=hf-token=hf_YOUR_TOKEN_HERE
+#   4. Apply: kubectl apply -f k8s/
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venera-chatbot
+  labels:
+    app: venera-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venera-chatbot
+  template:
+    metadata:
+      labels:
+        app: venera-chatbot
+    spec:
+      containers:
+        - name: venera-chatbot
+          image: us-east1-docker.pkg.dev/venera-chatbot/venera-chatbot/venera-chatbot:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: venera-secrets
+                  key: hf-token
+            - name: HF_REPO_ID
+              value: "quynh-venera1/venera-chatbot-model"
+            - name: HF_FILENAME
+              value: "model-q4.gguf"
+            - name: MODEL_CACHE_PATH
+              value: /app/model.gguf
+            - name: N_CTX
+              value: "4096"
+            - name: N_THREADS
+              value: "4"
+            - name: MAX_TOKENS
+              value: "512"
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            # First startup downloads ~1GB from HuggingFace then loads model.
+            # Allow up to 3 minutes before marking as not ready.
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 12

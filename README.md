@@ -12,9 +12,9 @@ Data acquisition, processing, and fine-tuning pipeline for the **Venera AI** cha
 | 2 | Data processing (clean, chunk, chat template, split) | Done |
 | 2.5 | Continued pre-training (CPT) data prep — *prototype/learning addition, not in original 9-stage plan* | Done |
 | 3 | Fine-tuning (Unsloth Studio GUI, Qwen2.5-1.5B) — CPT then LoRA instruction tuning | Next |
-| 4 | Evaluation (MCQ benchmark, retrieval metrics) | Pending |
-| 5 | Optimization (quantization via llama.cpp → GGUF) | Pending |
-| 6 | Deployment (CI/CD, Docker, Azure VM, GKE, Kubernetes) | Pending |
+| 4 | Evaluation (MCQ benchmark, 11/13 raw, 11/12 adjusted) | Done |
+| 5 | Optimization (GGUF Q4_K_M export via Unsloth Studio) | Done |
+| 6 | Deployment (FastAPI + Docker + GKE + GitHub Actions CI/CD) | Done |
 | 7 | Monitoring & stress testing | Pending |
 | 8 | Agentic AI layer (RAG, search tool, MCP) | Pending |
 | 9 | Automated retraining loop | Pending |
@@ -114,19 +114,3 @@ chatbot-finetuning/
 │       └── cpt_processor.py  (Stage 2.5 — CPT data prep)
 └── .github/workflows/data_acquisition.yml
 ```
-
-Findings to document before moving on
-Add these to your notes/README so they don't get lost by Stage 4:
-Known issues with this training run (v1):
-
-LR initially set wrong (1e-5 instead of 1e-4) — caught and corrected, final run used correct LR
-Only 6 optimizer steps total — extremely low, artifact of 92 train examples + effective batch size 32
-Model over-refuses on core product questions it should be able to answer ("Can I upload medical records?" refused despite being explicitly in training data)
-Vietnamese Q&A contamination in training data likely reinforced deferral behavior on ambiguous queries
-Off-topic blog content (nutrition, stress physiology) in training data may have contributed to scope confusion
-
-Hypothesized fixes for iteration 2:
-
-Filter /vi/ pages from crawler.py's URL discovery, not just from CPT prep
-Update synthetic.py's system prompt to skip blog/editorial pages (or filter by URL pattern before generation)
-Increase effective training steps — either more data, smaller batch size, or more epochs

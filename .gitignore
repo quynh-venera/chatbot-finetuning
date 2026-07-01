@@ -18,3 +18,4 @@ venv/
 # Editor
 .vscode/
 .idea/
+github-actions-key.json

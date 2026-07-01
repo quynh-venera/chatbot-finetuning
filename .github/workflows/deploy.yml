@@ -1,0 +1,68 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "serve/**"
+      - "Dockerfile"
+      - "k8s/**"
+  workflow_dispatch: {}
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: venera-chatbot-cluster
+  GKE_ZONE: us-east1-b
+  IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/venera-chatbot
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build Docker image
+        # No model baked in — image is just code (~100MB).
+        run: |
+          docker build \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            .
+
+      - name: Push Docker image to GCR
+        run: |
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/venera-chatbot \
+            venera-chatbot=$IMAGE:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/venera-chatbot --timeout=300s
+
+      - name: Print service endpoint
+        run: |
+          kubectl get service venera-chatbot-service
