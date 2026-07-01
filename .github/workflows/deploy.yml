@@ -74,7 +74,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/venera-chatbot --timeout=600s
+          kubectl rollout status deployment/venera-chatbot --timeout=900s
 
       - name: Print service endpoint
         run: |
