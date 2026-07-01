@@ -1,0 +1,86 @@
+# k8s/monitoring/alertmanager.yaml
+#
+# Alertmanager receives firing alerts from Prometheus (alert_rules.yml in
+# prometheus-configmap.yaml) and routes them. Ships with a placeholder
+# webhook receiver — swap in a real Slack/PagerDuty/email target before
+# relying on this for anything beyond the prototype.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    route:
+      receiver: default
+      group_by: ["alertname"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 3h
+      routes:
+        - match:
+            severity: critical
+          receiver: default
+          repeat_interval: 30m
+
+    receivers:
+      - name: default
+        # PLACEHOLDER: replace with a real Slack webhook, e.g.:
+        # slack_configs:
+        #   - api_url: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+        #     channel: "#venera-chatbot-alerts"
+        #     send_resolved: true
+        webhook_configs:
+          - url: "http://alertmanager-webhook-placeholder.invalid/"
+            send_resolved: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          args:
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+          ports:
+            - containerPort: 9093
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    app: alertmanager
+  ports:
+    - port: 9093
+      targetPort: 9093
+  type: ClusterIP

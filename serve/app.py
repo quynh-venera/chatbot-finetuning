@@ -22,10 +22,12 @@ import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from huggingface_hub import hf_hub_download
 from llama_cpp import Llama
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel
 
 # --- Configuration -----------------------------------------------------------
@@ -45,6 +47,44 @@ SYSTEM_PROMPT = (
     "features, and documentation. If you don't know the answer, say so clearly. "
     "You do not provide medical advice or diagnoses — only information about how "
     "Venera AI's platform works."
+)
+
+# --- Prometheus metrics -------------------------------------------------------
+# Scraped by the in-cluster Prometheus (see k8s/monitoring/) via the /metrics
+# endpoint below. Pod annotations (prometheus.io/scrape=true) tell Prometheus'
+# kubernetes_sd_configs to find this pod automatically — no manual target list.
+
+REQUEST_COUNT = Counter(
+    "chatbot_requests_total",
+    "Total HTTP requests received",
+    ["endpoint", "method", "status"],
+)
+REQUEST_LATENCY = Histogram(
+    "chatbot_request_latency_seconds",
+    "Request latency in seconds",
+    ["endpoint"],
+    buckets=(0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 60),
+)
+INFERENCE_ERRORS = Counter(
+    "chatbot_inference_errors_total",
+    "Total inference errors raised by the model",
+)
+TOKENS_GENERATED = Histogram(
+    "chatbot_tokens_generated",
+    "Tokens generated per /chat response",
+    buckets=(8, 16, 32, 64, 128, 256, 512, 1024),
+)
+REQUESTS_IN_PROGRESS = Gauge(
+    "chatbot_requests_in_progress",
+    "Number of /chat requests currently being served",
+)
+MODEL_LOADED = Gauge(
+    "chatbot_model_loaded",
+    "1 if the GGUF model is loaded and ready, 0 otherwise",
+)
+MODEL_LOAD_SECONDS = Gauge(
+    "chatbot_model_load_seconds",
+    "How long the last model load (download + init) took, in seconds",
 )
 
 # --- Model loading -----------------------------------------------------------
@@ -110,9 +150,13 @@ async def lifespan(app: FastAPI):
         n_threads=N_THREADS,
         verbose=False,
     )
-    print(f"[serve] Model loaded in {time.time() - t0:.1f}s")
+    load_seconds = time.time() - t0
+    MODEL_LOAD_SECONDS.set(load_seconds)
+    MODEL_LOADED.set(1)
+    print(f"[serve] Model loaded in {load_seconds:.1f}s")
     yield
     llm = None
+    MODEL_LOADED.set(0)
     print("[serve] Model unloaded.")
 
 
@@ -131,6 +175,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def prometheus_middleware(request: Request, call_next):
+    """Record request count and latency for every endpoint except /metrics
+    itself (scraping /metrics shouldn't inflate its own counters)."""
+    if request.url.path == "/metrics":
+        return await call_next(request)
+
+    start = time.time()
+    try:
+        response = await call_next(request)
+    except Exception:
+        REQUEST_COUNT.labels(endpoint=request.url.path, method=request.method, status="500").inc()
+        raise
+    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(time.time() - start)
+    REQUEST_COUNT.labels(
+        endpoint=request.url.path, method=request.method, status=str(response.status_code)
+    ).inc()
+    return response
 
 
 # --- Request/response models -------------------------------------------------
@@ -163,6 +227,13 @@ def ready():
     return {"status": "ready"}
 
 
+@app.get("/metrics")
+def metrics():
+    """Prometheus scrape target. Kept unauthenticated — the k8s Service is
+    ClusterIP-only, so this is only reachable from inside the cluster."""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     """
@@ -184,6 +255,7 @@ def chat(request: ChatRequest):
 
     max_tok = request.max_tokens or MAX_TOKENS
 
+    REQUESTS_IN_PROGRESS.inc()
     try:
         output = llm(
             prompt,
@@ -192,10 +264,14 @@ def chat(request: ChatRequest):
             echo=False,
         )
     except Exception as e:
+        INFERENCE_ERRORS.inc()
         raise HTTPException(status_code=500, detail=f"Inference error: {e}")
+    finally:
+        REQUESTS_IN_PROGRESS.dec()
 
     answer = output["choices"][0]["text"].strip()
     tokens_used = output["usage"]["total_tokens"]
+    TOKENS_GENERATED.observe(tokens_used)
 
     return ChatResponse(
         question=request.question,

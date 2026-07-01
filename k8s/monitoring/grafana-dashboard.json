@@ -1,0 +1,81 @@
+{
+  "title": "Venera Chatbot",
+  "uid": "venera-chatbot",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests/sec (/chat)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(chatbot_requests_total{endpoint=\"/chat\"}[1m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "p50 / p95 / p99 Latency (/chat)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(chatbot_request_latency_seconds_bucket{endpoint=\"/chat\"}[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(chatbot_request_latency_seconds_bucket{endpoint=\"/chat\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(chatbot_request_latency_seconds_bucket{endpoint=\"/chat\"}[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Tokens Generated per Response",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(chatbot_tokens_generated_bucket[5m])) by (le))",
+          "legendFormat": "p50 tokens"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "In-Progress Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "chatbot_requests_in_progress", "legendFormat": "in-progress" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Inference Error Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        { "expr": "rate(chatbot_inference_errors_total[5m])", "legendFormat": "errors/sec" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Model Loaded",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        { "expr": "chatbot_model_loaded", "legendFormat": "loaded" }
+      ]
+    }
+  ]
+}

@@ -26,10 +26,14 @@ spec:
     metadata:
       labels:
         app: venera-chatbot
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: venera-chatbot
-          image: gcr.io/YOUR_GCP_PROJECT_ID/venera-chatbot:latest
+          image: us-east1-docker.pkg.dev/venera-chatbot/venera-chatbot/venera-chatbot:latest
           ports:
             - containerPort: 8000
           env:
@@ -39,7 +43,7 @@ spec:
                   name: venera-secrets
                   key: hf-token
             - name: HF_REPO_ID
-              value: "YOUR_HF_USERNAME/venera-chatbot-model"
+              value: "quynh-venera1/venera-chatbot-model"
             - name: HF_FILENAME
               value: "model-q4.gguf"
             - name: MODEL_CACHE_PATH

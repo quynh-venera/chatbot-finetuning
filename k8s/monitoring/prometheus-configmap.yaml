@@ -1,0 +1,92 @@
+# k8s/monitoring/prometheus-configmap.yaml
+#
+# Scrape config: discovers pods cluster-wide, keeps only ones annotated
+# prometheus.io/scrape=true (set on venera-chatbot in k8s/deployment.yaml).
+# Also loads alert_rules.yml, evaluated locally and sent to Alertmanager.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ["alertmanager:9093"]
+
+    rule_files:
+      - /etc/prometheus/alert_rules.yml
+
+    scrape_configs:
+      - job_name: "kubernetes-pods"
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          # Only scrape pods explicitly opted in via annotation.
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          # Allow overriding the metrics path via annotation (default /metrics).
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          # Allow overriding the port via annotation.
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+  alert_rules.yml: |
+    groups:
+      - name: venera-chatbot-app-alerts
+        rules:
+          - alert: ChatbotHighLatency
+            expr: histogram_quantile(0.95, sum(rate(chatbot_request_latency_seconds_bucket{endpoint="/chat"}[5m])) by (le)) > 5
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "p95 /chat latency above 5s"
+              description: "p95 latency for /chat has been above 5 seconds for 5 minutes. Check pod CPU throttling and n_threads config."
+
+          - alert: ChatbotHighErrorRate
+            expr: |
+              sum(rate(chatbot_requests_total{endpoint="/chat",status=~"5.."}[5m]))
+              /
+              sum(rate(chatbot_requests_total{endpoint="/chat"}[5m])) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "/chat error rate above 5%"
+              description: "More than 5% of /chat requests have returned 5xx over the last 5 minutes."
+
+          - alert: ChatbotModelNotLoaded
+            expr: chatbot_model_loaded == 0
+            for: 3m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Model not loaded"
+              description: "chatbot_model_loaded has been 0 for 3+ minutes — pod is up but /ready is failing."
+
+          - alert: ChatbotNoTraffic
+            expr: sum(rate(chatbot_requests_total{endpoint="/chat"}[30m])) == 0
+            for: 30m
+            labels:
+              severity: info
+            annotations:
+              summary: "No /chat traffic in 30m"
+              description: "Informational — useful to confirm the exporter itself is alive during stress testing windows."
