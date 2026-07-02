@@ -4,12 +4,12 @@
 # Model is downloaded from HuggingFace at pod startup via HF_TOKEN.
 #
 # Before applying:
-#   1. Replace YOUR_GCP_PROJECT_ID with your actual GCP project ID.
-#   2. Replace YOUR_HF_USERNAME with your HuggingFace username.
-#   3. Create the venera-secrets Secret:
+#   1. Create the venera-secrets Secret (real token, not the literal string
+#      "YOUR_HF_TOKEN" — that placeholder made it into the secret once
+#      during Stage 7 and caused a run of confusing 401s):
 #      kubectl create secret generic venera-secrets \
 #        --from-literal=hf-token=hf_YOUR_TOKEN_HERE
-#   4. Apply: kubectl apply -f k8s/
+#   2. Apply: kubectl apply -f k8s/
 
 apiVersion: apps/v1
 kind: Deployment
@@ -19,6 +19,20 @@ metadata:
     app: venera-chatbot
 spec:
   replicas: 1
+  # Recreate instead of the default RollingUpdate. This is a prototype on a
+  # capacity-constrained node pool (each pod requests 1 CPU; a single
+  # e2-standard-2 node has ~2 vCPU allocatable after GKE's own system
+  # daemonsets). RollingUpdate needs old+new pods scheduled simultaneously
+  # during every deploy, which repeatedly deadlocked in Stage 7 — the old
+  # pod holds its CPU reservation and blocks the new one from scheduling,
+  # requiring manual `kubectl scale replicaset <old> --replicas=0` every
+  # single time. Recreate trades a few seconds of downtime per deploy
+  # (old pod is killed before the new one starts) for never needing that
+  # manual intervention. Fine for a prototype with no real traffic; revisit
+  # if this ever needs zero-downtime deploys (would need more node capacity
+  # instead, not a strategy change back to RollingUpdate).
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: venera-chatbot
@@ -67,6 +81,18 @@ spec:
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 30
+            # Stage 7 finding: under concurrent /chat load, inference is
+            # serialized (see INFERENCE_LOCK in serve/app.py) and CPU can
+            # sit near 100% for the duration. /health is a sync endpoint
+            # sharing the same threadpool as /chat, so it can occasionally
+            # miss the default 1s probe timeout even though the process is
+            # healthy — this caused a real SIGKILL restart during load
+            # testing. timeoutSeconds=10 gives it real room; failureThreshold=5
+            # means transient saturation needs to persist for 2.5 minutes
+            # (5 x 30s period) before Kubernetes concludes the pod is
+            # actually stuck, not just busy.
+            timeoutSeconds: 10
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /ready
@@ -75,4 +101,5 @@ spec:
             # Allow up to 5 minutes before marking as not ready.
             initialDelaySeconds: 60
             periodSeconds: 15
+            timeoutSeconds: 10
             failureThreshold: 20
